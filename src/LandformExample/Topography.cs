@@ -8,6 +8,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Revit.GeometryConversion;
+using RevitServices.Persistence;
 using RevitServices.Transactions;
 using Point = Autodesk.DesignScript.Geometry.Point;
 
@@ -15,45 +16,50 @@ namespace LandformExample
 {
     public class Topography
     {
+        //to hide the overall topography class
         private Topography()
         {
         }
 
         public static List<Point> GetPoints(Revit.Elements.Topography topography)
         {
+            //this example cheats and uses the built in Revit libraries to get the points
             var points = topography.Points;
             return points;
         }
 
         public static void DeletePoints(Revit.Elements.Topography topography, List<Point> pointsToRemove)
         {
+            //cast the Revit.Elements.Topograph to the Autodesk.Revit.DB.TopographySurface version
             var internalTopography = topography.InternalElement as TopographySurface;
+            //get the document related to the topography
+            //TIP: (this method is useful because it retrieves the related document rather than just the current one)
             var doc = internalTopography.Document;
+
+            /*TIP: you can also get the current active document with this built-in dynamo method
+            var doc = DocumentManager.Instance.CurrentDBDocument*/
 
             //force close the dynamo transaction
             TransactionManager.Instance.ForceCloseTransaction();
 
-            //start an edit scope
+            //start a topography edit scope
             TopographyEditScope editScope = new TopographyEditScope(doc, "Delete Points");
             editScope.Start(internalTopography.Id);
-
-            //start transaction to make a change
+            
+            //create and start a transaction to make a change to the topography
             Transaction transaction = new Transaction(doc);
             transaction.Start("Start deleting points.");
 
-            //delete points
+            //delete points - ToXyzs() will convert Dynamo points to Autodesk.Revit.DB.Point equivalents
             internalTopography.DeletePoints(pointsToRemove.ToXyzs());
 
-            //finish and commit
+            //finish and commit the transaction
             transaction.Commit();
 
             //commit the edit
             editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
         }
     }
-
-
-
 
     #region Helpers
     class TopographyEditFailuresPreprocessorVerbose : IFailuresPreprocessor
@@ -67,10 +73,10 @@ namespace LandformExample
             }
             catch (Exception e)
             {
+                TaskDialog.Show("Error", $"The edit failed. Here is the error message from Revit: {e.Message}");
                 return FailureProcessingResult.ProceedWithRollBack;
             }
         }
-
     }
     #endregion
 
