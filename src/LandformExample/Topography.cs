@@ -28,16 +28,28 @@ namespace LandformExample
         public static void DeletePoints(Revit.Elements.Topography topography, List<Point>pointsToRemove)
         {
             var internalTopography = topography.InternalElement as TopographySurface;
-            //start transaction to make a change
-            //TransactionManager.Instance.EnsureInTransaction(internalTopography.Document);
+            
             TransactionManager.Instance.ForceCloseTransaction();
-            //delete points
+
+
+            //start an edit scope
             TopographyEditScope editScope = new TopographyEditScope(internalTopography.Document, "Delete Points");
             editScope.Start(internalTopography.Id);
+
+            //start transaction to make a change
+            Transaction transaction = new Transaction(internalTopography.Document);
+            transaction.Start("Start deleting points.");
+
+            //delete points
             internalTopography.DeletePoints(pointsToRemove.ToXyzs());
-            editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
+
             //finish and commit
-            //TransactionManager.Instance.TransactionTaskDone();
+            transaction.Commit();
+
+            //commit the edit
+            editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
+            
+            
         }
     }
     class TopographyEditFailuresPreprocessorVerbose : IFailuresPreprocessor
