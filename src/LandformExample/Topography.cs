@@ -25,7 +25,7 @@ namespace LandformExample
             return points;
         }
 
-        public static void DeletePoints(Revit.Elements.Topography topography, List<Point>pointsToRemove)
+        public static void DeletePoints(Revit.Elements.Topography topography, List<Point> pointsToRemove)
         {
             var internalTopography = topography.InternalElement as TopographySurface;
             var doc = internalTopography.Document;
@@ -51,6 +51,11 @@ namespace LandformExample
             editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
         }
     }
+
+
+
+
+    #region Helpers
     class TopographyEditFailuresPreprocessorVerbose : IFailuresPreprocessor
     {
         // For debugging
@@ -67,4 +72,6 @@ namespace LandformExample
         }
 
     }
+    #endregion
+
 }
