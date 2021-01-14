@@ -28,16 +28,17 @@ namespace LandformExample
         public static void DeletePoints(Revit.Elements.Topography topography, List<Point>pointsToRemove)
         {
             var internalTopography = topography.InternalElement as TopographySurface;
-            
+            var doc = internalTopography.Document;
+
+            //force close the dynamo transaction
             TransactionManager.Instance.ForceCloseTransaction();
 
-
             //start an edit scope
-            TopographyEditScope editScope = new TopographyEditScope(internalTopography.Document, "Delete Points");
+            TopographyEditScope editScope = new TopographyEditScope(doc, "Delete Points");
             editScope.Start(internalTopography.Id);
 
             //start transaction to make a change
-            Transaction transaction = new Transaction(internalTopography.Document);
+            Transaction transaction = new Transaction(doc);
             transaction.Start("Start deleting points.");
 
             //delete points
@@ -48,8 +49,6 @@ namespace LandformExample
 
             //commit the edit
             editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
-            
-            
         }
     }
     class TopographyEditFailuresPreprocessorVerbose : IFailuresPreprocessor
@@ -59,27 +58,10 @@ namespace LandformExample
         {
             try
             {
-                TaskDialog.Show("Preprocess failures", "Hello");
-                IList<FailureMessageAccessor> failureMessages = failuresAccessor.GetFailureMessages();
-                int numberOfFailures = failureMessages.Count;
-                TaskDialog.Show("Preprocess failures", "Found " + numberOfFailures + " failure messages.");
-                if (numberOfFailures < 5)
-                {
-                    foreach (FailureMessageAccessor msgAccessor in failureMessages)
-                    {
-                        TaskDialog.Show("Failure!", msgAccessor.GetDescriptionText());
-                    }
-                }
-                else
-                {
-                    TaskDialog.Show("Failure 1 of " + numberOfFailures, failureMessages.First<FailureMessageAccessor>().GetDescriptionText());
-                }
-                TaskDialog.Show("Preprocess failures", "Goodbye");
                 return FailureProcessingResult.Continue;
             }
             catch (Exception e)
             {
-                TaskDialog.Show("Exception", e.ToString());
                 return FailureProcessingResult.ProceedWithRollBack;
             }
         }
