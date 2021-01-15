@@ -23,7 +23,7 @@ namespace LandformExample
             return points;
         }
 
-        public static void DeletePoints(Revit.Elements.Topography topography, List<Point> pointsToRemove)
+        public static Revit.Elements.Topography DeletePoints(Revit.Elements.Topography topography, List<Point> pointsToRemove)
         {
             //cast the Revit.Elements.Topograph to the Autodesk.Revit.DB.TopographySurface version
             var internalTopography = topography.InternalElement as TopographySurface;
@@ -53,6 +53,9 @@ namespace LandformExample
 
             //commit the edit
             editScope.Commit(new TopographyEditFailuresPreprocessorVerbose());
+
+            //return the original topography element after we modified it.
+            return topography;
         }
     }
 
